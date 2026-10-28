@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-generate_catalog.py — Genera el catálogo de tipos de instancia con PRECIOS reales
-(hora y mes) para 6 servicios de AWS: EC2, RDS, ElastiCache, OpenSearch, Redshift y MQ.
+generate_catalog.py — Generates the instance type catalog with real PRICES
+(hourly and monthly) for 6 AWS services: EC2, RDS, ElastiCache, OpenSearch, Redshift and MQ.
 
-Produce un services.json con la MISMA forma que consume la página Instance Explorer:
+Produces a services.json with the SAME shape the Instance Explorer page consumes:
   { "catlabels": {...}, "services": [ {id,name,cols,instances:[...]} ] }
 
-Fuentes:
-  - Especificaciones (vCPU, memoria, red, almacenamiento, GPU, arquitectura): EC2 DescribeInstanceTypes.
-    Los servicios gestionados reusan la spec de su familia EC2 equivalente (db.<t> / cache.<t> / <t>.search / mq.<t>).
-  - Precios On-Demand: AWS Price List Query API (pricing:GetProducts), por serviceCode y región.
-  - Mensual = hora × 730.
+Sources:
+  - Specifications (vCPU, memory, network, storage, GPU, architecture): EC2 DescribeInstanceTypes.
+    Managed services reuse the spec of their equivalent EC2 family (db.<t> / cache.<t> / <t>.search / mq.<t>).
+  - On-Demand prices: AWS Price List Query API (pricing:GetProducts), by serviceCode and region.
+  - Monthly = hourly × 730.
 
-Requisitos:
+Requirements:
   pip install boto3
-  Credenciales AWS con permisos de lectura (ver README). La Pricing API vive en us-east-1 / ap-south-1.
+  AWS credentials with read permissions (see README). The Pricing API lives in us-east-1 / ap-south-1.
 
-Uso:
+Usage:
   python generate_catalog.py --region us-east-1 --out services.json
   python generate_catalog.py --region eu-west-1 --rds-engine PostgreSQL --mq-engine ActiveMQ
 """
@@ -24,11 +24,11 @@ import argparse, json, re, sys
 import boto3
 
 HRS = 730
-CATLBL = {'general':'Propósito general','compute':'Cómputo optimizado','memory':'Memoria optimizada',
-          'storage':'Almacenamiento optimizado','accel':'Cómputo acelerado'}
+CATLBL = {'general':'General purpose','compute':'Compute optimized','memory':'Memory optimized',
+          'storage':'Storage optimized','accel':'Accelerated computing'}
 
-# ---------- helpers de clasificación ----------
-def fam_of(t):            # familia: token antes del primer punto (sin prefijo de servicio)
+# ---------- classification helpers ----------
+def fam_of(t):            # family: token before the first dot (without service prefix)
     base = t.split('.', 1)[0]
     return re.match(r'[a-z0-9]+', base).group(0)
 
@@ -81,7 +81,7 @@ def od_price(pj):
     return None
 
 def price_map(pricing, service_code, region, extra_filters, type_field='instanceType'):
-    """Devuelve {instanceType: precio_hora_USD} On-Demand para la región dada."""
+    """Returns {instanceType: hourly_price_USD} On-Demand for the given region."""
     filters = [{'Type': 'TERM_MATCH', 'Field': 'regionCode', 'Value': region}] + extra_filters
     out = {}
     try:
@@ -96,10 +96,10 @@ def price_map(pricing, service_code, region, extra_filters, type_field='instance
                 if p is not None and (it not in out or p < out[it]):
                     out[it] = p
     except Exception as e:
-        print(f"  [aviso] precios {service_code}: {e}", file=sys.stderr)
+        print(f"  [warning] prices {service_code}: {e}", file=sys.stderr)
     if not out:
-        print(f"  [aviso] {service_code}: 0 precios con los filtros {[(f['Field'], f['Value']) for f in extra_filters]}. "
-              f"Valores publicados por AWS en {region}:", file=sys.stderr)
+        print(f"  [warning] {service_code}: 0 prices with filters {[(f['Field'], f['Value']) for f in extra_filters]}. "
+              f"Values published by AWS in {region}:", file=sys.stderr)
         try:
             seen = {}
             for page in pricing.get_paginator('get_products').paginate(
@@ -111,10 +111,10 @@ def price_map(pricing, service_code, region, extra_filters, type_field='instance
             for field, vals in seen.items():
                 print(f"      {field}: {sorted(map(str, vals))}", file=sys.stderr)
         except Exception as e:
-            print(f"      (no se pudo listar: {e})", file=sys.stderr)
+            print(f"      (could not list: {e})", file=sys.stderr)
     return out
 
-# ---------- construcción por servicio ----------
+# ---------- per-service construction ----------
 def row(t, spec_base, price, extra=None):
     fam = fam_of(t); cat = cat_of(fam)
     s = spec_base or {}
@@ -137,14 +137,14 @@ def build_ec2(spec, pricing, region):
     return [row(t, spec[t], pm.get(t)) for t in sorted(spec)]
 
 def build_managed(spec, pricing, region, service_code, extra_filters, prefix='', suffix='', cfg=None, add_family=False):
-    """Deriva specs de la familia EC2 y toma precios reales del servicio gestionado."""
-    pm = price_map(pricing, service_code, region, extra_filters)   # {db.m5.large: precio, ...}
+    """Derives specs from the EC2 family and takes real prices from the managed service."""
+    pm = price_map(pricing, service_code, region, extra_filters)   # {db.m5.large: price, ...}
     rows = []
     for it in sorted(pm):
         ec2_base = it[len(prefix):len(it)-len(suffix)] if (it.startswith(prefix) and it.endswith(suffix)) else it
         base = spec.get(ec2_base)
         extra = {}
-        if prefix and not it.startswith(prefix):   # MQ publica m5.large sin el prefijo mq.
+        if prefix and not it.startswith(prefix):   # MQ publishes m5.large without the mq. prefix
             it_name = prefix + it
         else:
             it_name = it
@@ -155,22 +155,22 @@ def build_managed(spec, pricing, region, service_code, extra_filters, prefix='',
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--region', default='us-east-1', help='Región AWS (regionCode), p.ej. us-east-1')
+    ap.add_argument('--region', default='us-east-1', help='AWS region (regionCode), e.g. us-east-1')
     ap.add_argument('--out', default='public/services.json')
     ap.add_argument('--rds-engine', default='PostgreSQL')
     ap.add_argument('--rds-deployment', default='Single-AZ')
     ap.add_argument('--cache-engine', default='Redis')
     ap.add_argument('--mq-engine', default='ActiveMQ')
-    ap.add_argument('--mq-deployment', default='Single-AZ', help='Single-AZ | Multi-AZ (valores de la Price List)')
+    ap.add_argument('--mq-deployment', default='Single-AZ', help='Single-AZ | Multi-AZ (Price List values)')
     args = ap.parse_args()
 
     print(f"[1/3] EC2 DescribeInstanceTypes ({args.region})…")
     spec = ec2_specs(args.region)
-    print(f"      {len(spec)} tipos EC2")
+    print(f"      {len(spec)} EC2 types")
 
-    pricing = boto3.client('pricing', region_name='us-east-1')  # endpoint de Pricing
+    pricing = boto3.client('pricing', region_name='us-east-1')  # Pricing endpoint
 
-    print("[2/3] Precios On-Demand por servicio (Price List)…")
+    print("[2/3] On-Demand prices per service (Price List)…")
     services = [
         {'id':'ec2','name':'Amazon EC2','cols':['t','v','m','sto','net','a','gpu','hr','mo'],
          'instances': build_ec2(spec, pricing, args.region)},
@@ -195,7 +195,7 @@ def main():
             prefix='mq.', cfg=f'{args.mq_engine} · {args.mq_deployment}')},
     ]
 
-    out = {'source': f'AWS APIs en vivo · región {args.region}', 'region': args.region,
+    out = {'source': f'Live AWS APIs · region {args.region}', 'region': args.region,
            'catlabels': CATLBL, 'services': services}
     with open(args.out, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
@@ -203,8 +203,8 @@ def main():
     print("[3/3] Resumen:")
     for s in services:
         with_price = sum(1 for d in s['instances'] if d['hr'] is not None)
-        print(f"      {s['id']:12} {len(s['instances']):>5} tipos · {with_price} con precio")
-    print(f"Escrito {args.out}. Pégalo en la página: reemplaza el contenido de <script id=\"svc-data\">.")
+        print(f"      {s['id']:12} {len(s['instances']):>5} types · {with_price} with price")
+    print(f"Wrote {args.out}. Paste it into the page: replace the contents of <script id=\"svc-data\">.")
 
 if __name__ == '__main__':
     main()

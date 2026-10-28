@@ -13,7 +13,7 @@ export const PATHS = {
   sliders: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>,
   compare: <path d="M7 4v16M17 4v16M3 8h4M3 16h4M17 8h4M17 16h4"/>,
   db: <><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/></>,
-  // iconos de servicio
+  // service icons
   ec2: <><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></>,
   rds: <><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></>,
   elasticache: <path d="M13 2 4 14h7l-1 8 9-12h-7z"/>,

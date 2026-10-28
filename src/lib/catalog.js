@@ -19,7 +19,7 @@ const fmt = (n, min, max) => n.toLocaleString('en-US', { minimumFractionDigits: 
 export const money = n => '$' + fmt(n, n < 10 ? 4 : 2, n < 10 ? 4 : 2) + '/hr';
 export const money0 = n => '$' + fmt(n, 0, 2) + '/mo';
 
-/* Precios On-Demand us-east-1 (Linux). Modelo lineal de AWS: precio = base(.large de la familia) × factor de tamaño. */
+/* On-Demand prices, us-east-1 (Linux). AWS linear model: price = base (the family's .large) × size factor. */
 const NORM = { nano:0.0625,micro:0.125,small:0.25,medium:0.5,large:1,xlarge:2,'2xlarge':4,'3xlarge':6,'4xlarge':8,'6xlarge':12,'8xlarge':16,'9xlarge':18,'12xlarge':24,'16xlarge':32,'18xlarge':36,'24xlarge':48,'32xlarge':64,'48xlarge':96 };
 const FAMILY_LARGE = {
   t2:0.0928,t3:0.0832,t3a:0.0752,t4g:0.0672,
@@ -30,7 +30,7 @@ const FAMILY_LARGE = {
 };
 const sizeTok = t => t.split('.').slice(1).join('.');
 
-/** Devuelve el catálogo con los precios de EC2 calculados (sin mutar el original). */
+/** Returns the catalog with computed EC2 prices (without mutating the original). */
 export function applyPrices(db) {
   return {
     ...db,

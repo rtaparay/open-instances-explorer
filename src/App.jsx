@@ -24,7 +24,7 @@ export default function App() {
 
   useEffect(() => {
     let saved = null;
-    try { saved = localStorage.getItem('ie-theme'); } catch { /* sin storage */ }
+    try { saved = localStorage.getItem('ie-theme'); } catch { /* no storage */ }
     if (saved) document.documentElement.setAttribute('data-theme', saved);
     setDark(isDark());
   }, []);
@@ -49,7 +49,7 @@ export default function App() {
   const toggleTheme = () => {
     const next = isDark() ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('ie-theme', next); } catch { /* sin storage */ }
+    try { localStorage.setItem('ie-theme', next); } catch { /* no storage */ }
     setDark(next === 'dark');
   };
 
@@ -74,8 +74,8 @@ export default function App() {
           <Sidebar services={db.services} catLabels={db.catlabels || {}} activeSvc={view === 'service' ? activeSvc : null} famFilter={famFilter} onService={openService} onFam={setFamFilter} />
         )}
         <main className="min-h-0 overflow-y-auto px-6 pb-10 pt-[22px]">
-          {error && <div className="p-10 text-center text-muted">No se pudo cargar el catálogo: {error}. Usa <code>npm run dev</code> o <code>npm run preview</code>, no file://</div>}
-          {!db && !error && <div className="p-10 text-center text-muted">Cargando…</div>}
+          {error && <div className="p-10 text-center text-muted">Could not load the catalog: {error}. Use <code>npm run dev</code> or <code>npm run preview</code>, not file://</div>}
+          {!db && !error && <div className="p-10 text-center text-muted">Loading…</div>}
           {db && view === 'home' && <Home services={db.services} />}
           {service && <ServiceTable key={service.id} service={service} famFilter={famFilter} filters={numFilters} search={search} />}
         </main>

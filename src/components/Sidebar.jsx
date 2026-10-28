@@ -17,7 +17,7 @@ function Families({ service, catLabels, famFilter, onFam }) {
   );
   return (
     <div className="pb-2 pl-1.5 pt-1">
-      {row('', 'Todas las familias', service.instances.length)}
+      {row('', 'All families', service.instances.length)}
       {CATORDER.filter(c => byCat[c]).map(c => (
         <div key={c}>
           <div className="px-2 pb-1 pt-2 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-faint">{catLabels[c] || c}</div>

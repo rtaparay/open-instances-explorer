@@ -14,7 +14,7 @@ const SVCICON={
   mq:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
 };
 
-/* Precios On-Demand us-east-1 (Linux). Modelo lineal de AWS: precio = base(.large de la familia) × factor de tamaño. */
+/* On-Demand prices, us-east-1 (Linux). AWS linear model: price = base (the family's .large) × size factor. */
 const NORM={nano:0.0625,micro:0.125,small:0.25,medium:0.5,large:1,xlarge:2,'2xlarge':4,'3xlarge':6,'4xlarge':8,'6xlarge':12,'8xlarge':16,'9xlarge':18,'12xlarge':24,'16xlarge':32,'18xlarge':36,'24xlarge':48,'32xlarge':64,'48xlarge':96};
 const FAMILY_LARGE={
   t2:0.0928,t3:0.0832,t3a:0.0752,t4g:0.0672,
@@ -66,7 +66,7 @@ function renderSide(){
       s.instances.forEach(d=>{byCat[d.cat]=byCat[d.cat]||{};byCat[d.cat][d.fam]=(byCat[d.cat][d.fam]||0)+1;});
       const cats=CATORDER.filter(c=>byCat[c]);
       tree='<div class="fams">'+
-        `<button class="fam-row" data-fam="" aria-current="${famFilter===null}"><span>Todas las familias</span><span class="cnt">${s.instances.length}</span></button>`+
+        `<button class="fam-row" data-fam="" aria-current="${famFilter===null}"><span>All families</span><span class="cnt">${s.instances.length}</span></button>`+
         cats.map(c=>{
           const fams=Object.keys(byCat[c]).sort();
           return `<div class="cat-h">${esc(CATLBL[c]||c)}</div>`+fams.map(f=>
@@ -122,7 +122,7 @@ function renderBody(){
   if(view!=='service')return;
   const s=svcById(activeSvc);const list=rowsFor(s);const cols=s.cols;
   $('#tbody').innerHTML=list.length?list.map(d=>`<tr>${cols.map(k=>cell(d,k)).join('')}</tr>`).join('')
-    :`<tr><td colspan="${cols.length}" class="empty">Sin resultados.</td></tr>`;
+    :`<tr><td colspan="${cols.length}" class="empty">No results.</td></tr>`;
   $('#cnt').textContent=`${list.length.toLocaleString('en-US')} de ${s.instances.length.toLocaleString('en-US')} instancias`;
 }
 function renderMain(){
@@ -133,10 +133,10 @@ function renderMain(){
     <div class="main-h">
       <h2>${esc(s.name)}</h2>
       <span class="cnt" id="cnt"></span>
-      <div class="qf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="qf" type="search" placeholder="Filtro rápido, ej. r7g…" autocomplete="off"></div>
+      <div class="qf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="qf" type="search" placeholder="Quick filter, e.g. r7g…" autocomplete="off"></div>
     </div>
     <div class="tablewrap"><table><thead><tr>${head}</tr></thead><tbody id="tbody"></tbody></table></div>
-    <div class="note"><b>Fuente.</b> Specs de EC2 desde <code>DescribeInstanceTypes</code> (moto, Apache-2.0). <b>Precios</b> On-Demand us-east-1 (Linux) calculados con el modelo lineal de AWS: precio base <code>.large</code> de la familia × factor de tamaño (large=1, xlarge=2, 2xlarge=4…). Cubre las familias estándar; familias sin base y los servicios gestionados (RDS, ElastiCache, OpenSearch, MQ, Redshift) muestran <code>—</code> hasta cruzar con el <b>AWS Price List</b> por servicio y región.</div>`;
+    <div class="note"><b>Source.</b> EC2 specs from <code>DescribeInstanceTypes</code> (moto, Apache-2.0). <b>Prices</b> On-Demand us-east-1 (Linux) computed with AWS's linear model: base price <code>.large</code> of the family × size factor (large=1, xlarge=2, 2xlarge=4…). Covers the standard families; families without a base price and the managed services (RDS, ElastiCache, OpenSearch, MQ, Redshift) show <code>—</code> until matched against the <b>AWS Price List</b> per service and region.</div>`;
   $('#qf').addEventListener('input',renderBody);
   $('#main').querySelectorAll('thead th').forEach(th=>th.addEventListener('click',()=>{
     const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=1;}
@@ -157,20 +157,20 @@ function renderHome(){
   const feat=(ic,h,p)=>`<div class="feat"><div class="fi">${ic}</div><h3>${h}</h3><p>${p}</p></div>`;
   $('#main').innerHTML=`
     <section class="hero">
-      <span class="eyebrow">${icGear} Catálogo de specs y precios AWS</span>
-      <h2>Cada tipo de instancia AWS, con specs y precio comparables.</h2>
-      <p>Explora los tipos de instancia de seis servicios de AWS —EC2, RDS, ElastiCache, OpenSearch, Redshift y MQ— organizados por familia. Encuentra la instancia adecuada, revisa su configuración y compárala por specs.</p>
+      <span class="eyebrow">${icGear} AWS specs and pricing catalog</span>
+      <h2>Every AWS instance type, with comparable specs and prices.</h2>
+      <p>Explore the instance types of six AWS services — EC2, RDS, ElastiCache, OpenSearch, Redshift and MQ — organized by family. Find the right instance, review its configuration and compare it by specs.</p>
     </section>
     <div class="stats">
-      ${stat(icCube,'Tipos de instancia',tot.toLocaleString('en-US'),'en 6 servicios AWS')}
-      ${stat(icDb,'Servicios',svcN,'EC2 · RDS · ElastiCache · OpenSearch · Redshift · MQ')}
-      ${stat(icLayers,'Familias',fams,'agrupadas por categoría')}
-      ${stat(icGear,'Fuente','moto','DescribeInstanceTypes · Apache-2.0')}
+      ${stat(icCube,'Instance types',tot.toLocaleString('en-US'),'across 6 AWS services')}
+      ${stat(icDb,'Services',svcN,'EC2 · RDS · ElastiCache · OpenSearch · Redshift · MQ')}
+      ${stat(icLayers,'Families',fams,'grouped by category')}
+      ${stat(icGear,'Source','moto','DescribeInstanceTypes · Apache-2.0')}
     </div>
     <div class="features">
-      ${feat(icLayers,'Explora por servicio y familia','Los tipos de EC2, RDS, ElastiCache, OpenSearch, Redshift y MQ, organizados por familia con sus especificaciones.')}
-      ${feat(icSliders,'Filtra y ordena cada opción','Acota por vCPU, memoria y presupuesto mensual, y ordena por cualquier columna para hallar la instancia ideal.')}
-      ${feat(icCompare,'Specs reales desde la API','Specs tomadas de DescribeInstanceTypes; precios referenciales listos para cruzar con el AWS Price List.')}
+      ${feat(icLayers,'Browse by service and family','The EC2, RDS, ElastiCache, OpenSearch, Redshift and MQ types, organized by family with their specifications.')}
+      ${feat(icSliders,'Filter and sort every option','Narrow by vCPU, memory and monthly budget, and sort by any column to find the ideal instance.')}
+      ${feat(icCompare,'Real specs from the API','Specs taken from DescribeInstanceTypes; reference prices ready to be matched against the AWS Price List.')}
     </div>`;
 }
 
@@ -200,7 +200,7 @@ fetch('services.json',{cache:'no-store'})
     applyPrices();
     renderSide();renderMain();
   })
-  .catch(e=>{ $('#main').innerHTML='<div class="empty">No se pudo cargar el catálogo: '+esc(e.message)+'. Abre la página con un servidor local (python3 -m http.server), no con file://</div>'; });
+  .catch(e=>{ $('#main').innerHTML='<div class="empty">Could not load the catalog: '+esc(e.message)+'. Open the page with a local server (python3 -m http.server), not file://</div>'; });
 
 $('#sideBtn').addEventListener('click',()=>$('.shell').classList.toggle('hide-side'));
 $('#homeBtn').addEventListener('click',()=>{view='home';famFilter=null;renderSide();renderMain();});
